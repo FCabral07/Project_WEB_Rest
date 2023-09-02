@@ -7,7 +7,7 @@ const productSchema = new Schema({
     name: {type: String, required: true, unique: true, lowercase: true},
     price: {type: Number, required: true},
     qtd: {type: String},
-    category: {type: String, required: true},
+    category: {type: String, required: true, lowercase:true},
 });
 
 // Exportando o model

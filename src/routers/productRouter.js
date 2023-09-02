@@ -10,6 +10,7 @@ const productRouter = express.Router()
 
 // Definindo as rotas que precisam dos tokens
 productRouter.use('/product', authMiddleware, roleMiddleware)
+productRouter.use('/products', authMiddleware)
 
 // Rotas simples, sem parametros
 productRouter.route('/product')

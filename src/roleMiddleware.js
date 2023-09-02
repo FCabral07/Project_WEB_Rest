@@ -15,6 +15,7 @@ module.exports = (req, res, next) => {
 
     // Sistema encontra o token e entra no try catch
     try {
+        // Mesma coisa do AUTH, retira o Bearer da frente
         const decoded = jwt.verify(token.split(' ')[1], process.env.SECRET_KEY);
         
         // Checando qual a categoria do acesso: USUARIO || FUNCIONARIO

@@ -15,10 +15,9 @@ userRouter.use('/user', authMiddleware, roleMiddleware)
 userRouter.route('/user')
 .get((req, res) => userController.getUsers(req, res))
 .put((req, res) => userController.updateUser(req, res))
-
-// Rotas que precisam dos parametros
-userRouter.route('/user/:id')
-.get((req, res) => userController.getUser(req, res))
+// Tanto o getUser como o deleteUser eu preferi usar sem passar parametros como o CPF
+// via URL, por questões de segurança, para isso se passa no body
+.post((req, res) => userController.getUser(req, res))
 .delete((req, res) => userController.deleteUser(req, res))
 
 // Rota de login
