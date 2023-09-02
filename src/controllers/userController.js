@@ -7,7 +7,7 @@ dotenv.config({path: 'config.env'})
 
 //  Criando a exportação
 module.exports = {
-    // Criação dos tokens
+    
     createUser: async (req, res) => {
         try{
             const result = await userModel.create(req.body)
@@ -58,9 +58,12 @@ module.exports = {
 
         try {
             const user = await userModel.findOne({ username: username, password: password });
-
+            // Autenticando o token e o user
             if (user) {
-                const token = jwt.sign({username: user.username}, process.env.SECRET_KEY, { expiresIn: '1h'} )
+                // Procurando a função do usuário
+                const role = user.role === 'funcionario' ? 'funcionario' : 'usuario'
+
+                const token = jwt.sign({username: user.username, role: role}, process.env.SECRET_KEY, { expiresIn: '1h'} )
                 res.status(200).json({ message: "Autenticação realizada.", token: token });
             } else {
                 res.status(401).json({ message: "Credenciais inválidas." });

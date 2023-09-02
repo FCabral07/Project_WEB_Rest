@@ -7,8 +7,10 @@ const userSchema = new Schema({
     username: {type: String, required: true, unique: true},
     name: {type: String},
     cpf: {type: String, required: true, unique: true},
-    password: {type: String, required: true},
+    password: {type: String, required: true, select: false},
     salary: {type: Number},
+    // Defino se é usuário ou funcionário
+    role: {type: String}
     // Espaço para criar um histórico de compras
 });
 
