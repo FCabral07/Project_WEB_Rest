@@ -6,8 +6,11 @@ const Schema = mongoose.Schema;
 const productSchema = new Schema({
     name: {type: String, required: true, unique: true, lowercase: true},
     price: {type: Number, required: true},
+    promotionPrice: {type: Number, default: null},
     qtd: {type: String},
-    category: {type: String, required: true, lowercase:true},
+    category: {type: String, required: true, lowercase:true},   // É o tipo do produto
+    expDate: {type: Date, required: true},
+    description: {type: String}
 });
 
 // Exportando o model

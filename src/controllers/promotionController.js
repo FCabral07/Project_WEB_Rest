@@ -1,9 +1,30 @@
 const Promotion = require('../models/promotionModel');
+const Product = require('../models/productModel');
 
 module.exports = {
     createPromotion: async (req, res) => {
         try {
-            const newPromotion = await Promotion.create(req.body);
+            const { name, products, discount } = req.body;
+            
+            // Converte os nomes dos produtos em IDs procurando no banco de dados
+            const productIds = await Product.find({ name: { $in: products } }, '_id');
+            
+            // Crie a promoção usando os IDs dos produtos encontrados
+            const newPromotion = await Promotion.create({
+                name,
+                products: productIds,
+                discount,
+            });
+    
+            // Atualiza o campo promotionPrice dos produtos associados
+            for (const productId of productIds) {
+                const product = await Product.findById(productId);
+                if (product) {
+                    product.promotionPrice = product.price * (1 - discount / 100).toFixed(2);
+                    await product.save();
+                }
+            }
+            
             res.status(201).json({ message: 'Promoção cadastrada com sucesso!', promotion: newPromotion });
         } catch (err) {
             res.status(500).json({ message: 'Não foi possível cadastrar a promoção', error: err.message });
@@ -34,12 +55,21 @@ module.exports = {
         }
     },
 
+    // Deletando de acordo com o ID auto incrementável criado no model
     deletePromotion: async (req, res) => {
         try {
-            const deletedPromotion = await Promotion.findByIdAndDelete(req.params.id);
+            const deletedPromotion = await Promotion.findOneAndDelete({ id: req.params.id });
+    
             if (!deletedPromotion) {
                 return res.status(404).json({ message: 'Promoção não encontrada' });
             }
+    
+            // Obtém a lista de IDs dos produtos associados à promoção
+            const productIds = deletedPromotion.products;
+    
+            // Atualiza cada produto para definir promotionPrice como null
+            await Product.updateMany({ _id: { $in: productIds } }, { promotionPrice: null });
+    
             res.status(200).json({ message: 'Promoção removida com sucesso!' });
         } catch (err) {
             res.status(500).json({ message: 'Não foi possível remover a promoção', error: err.message });
@@ -59,11 +89,3 @@ module.exports = {
     },
 };
 
-
-// FALTA CRIAR
-
-
-
-// Dar a opção para o usuário poder atualizar um conjunto de itens
-// de uma só vez (aplicar um desconto por exemplo em todos os itens 
-// do tipo chocolate)

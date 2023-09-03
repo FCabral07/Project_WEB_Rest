@@ -15,7 +15,7 @@ module.exports = {
 
     getProduct: async (req, res) => {
         try{
-            const result = await productModel.findOne({ name: req.params.id }).select(["-_v", "-_id", "-__v"]);
+            const result = await productModel.findOne({ name: req.params.id });
             res.status(200).send(result)
         }catch(err){
             res.status(503).json({message: "Não foi possível recuperar o produto no momento"})
@@ -23,7 +23,7 @@ module.exports = {
     },
 
     getProducts: async (req, res) => {
-        productModel.find({}).select(["-_v", "-_id", "-__v"]).then((result)=> {
+        productModel.find({}).select(["-_v", "-_id"]).then((result)=> {
             res.status(200).json(result)
         }).catch(() => {
             res.status(503).json({message: "Não foi possível recuperar os produtos"})
