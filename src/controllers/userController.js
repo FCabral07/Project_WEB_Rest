@@ -1,56 +1,119 @@
 // Importando o model
-const userModel = require('../models/userModel')
-const jwt = require('jsonwebtoken')
-const dotenv = require('dotenv')
-const bcrypt = require('bcrypt')
+const userModel = require('../models/userModel');
+const jwt = require('jsonwebtoken');
+const dotenv = require('dotenv');
+const bcrypt = require('bcrypt');
+const saltRounds = 10;  // Número de rounds do meu HASH
 
-dotenv.config({path: 'config.env'})
+dotenv.config({ path: 'config.env' });
 
-//  Criando a exportação
+// Criando a exportação
 module.exports = {
-    
     createUser: async (req, res) => {
-        try{
-            const result = await userModel.create(req.body)
-
-            res.status(201).json({message: `O usuário foi criado com sucesso!`})
-        }catch (err){
-            res.status(501).json({message: `Não foi possível criar o usuário`})
+        try {
+            // Verifico se 'salary' está presente no body
+            const isEmployee = 'salary' in req.body;
+    
+            // Uso o model de acordo com a verificação acima
+            const userModelType = isEmployee ? userModel.Employee : userModel.User;
+            
+            // Crio um novo usuario
+            const newUser = new userModelType(req.body);
+    
+            // Criptografo a senha
+            const hashedPassword = await bcrypt.hash(newUser.password, saltRounds);
+            newUser.password = hashedPassword;
+    
+            await newUser.save();
+            
+            res.status(201).json({ message: 'Usuário criado com sucesso.' });
+        } catch (err) {
+            res.status(500).json({ message: 'Erro ao criar o usuário.' });
         }
     },
 
     getUser: async (req, res) => {
-        try{
-            const result = await userModel.findOne({cpf: req.body.cpf})
-            res.status(200).send(result)
-        }catch(err){
-            res.status(503).json({message: "Não foi possível recuperar o usuário no momento"})
+        try {
+            // Retorno o usuário especifico excluindo alguns parametros como o id e quantas vezes foi modificado
+            const result = await userModel.findOne({ cpf: req.body.cpf }).select(["-_v", "-_id", "-__v"]);
+            res.status(200).send(result);
+        } catch (err) {
+            res.status(503).json({ message: 'Não foi possível recuperar o usuário no momento' });
         }
     },
 
     getUsers: async (req, res) => {
-        userModel.find({}).select(["-_v", "-_id"]).then((result)=> {
-            res.status(200).json(result)
-        }).catch(() => {
-            res.status(503).json({message: "Não foi possível recuperar os usuários"})
-        })
+        try {
+            // Retorno os usuários excluindo alguns parametros como o id e quantas vezes foi modificado
+            const users = await userModel.User.find({}).select(["-_v", "-_id", "-__v"]);
+            res.status(200).json(users);
+        } catch (error) {
+            res.status(503).json({ message: "Não foi possível recuperar os usuários." });
+        }
     },
 
     updateUser: async (req, res) => {
-        try{
-            const result = await userModel.updateOne({cpf: req.body.cpf}, req.body)
-            res.status(200).send({message: "Usuário atualizado com sucesso."})
-        }catch(err){
-            res.status(501).json({message: "Não foi possível atualizar a lista dos dados"})
+        try {
+            const { cpf, password } = req.body;
+            const isEmployee = 'salary' in req.body; // Verifica se o campo 'salary' está presente
+    
+            // Define o valor da constante abaixo baseado se há o arg salário no body
+            const userModelType = isEmployee ? userModel.Employee : userModel.User;
+    
+            // Encontra o usuário procurando o CPF e se é func ou user
+            const user = await userModelType.findOne({ cpf: cpf });
+    
+            // Se não houver retorno de usuário
+            if (!user) {
+                return res.status(404).json({ message: 'Usuário não encontrado.' });
+            }
+    
+            // Atualiza os campos de acordo com a solicitação
+            const update = req.body;
+            for (const key in update) {
+                if (Object.hasOwnProperty.call(update, key)) {
+                    user[key] = update[key];
+                }
+            }
+    
+            // Se o parametro para atualizar for a senha, entra no if abaixo
+            if (password) {
+                // Criptografa novamente antes de salvar no BD
+                const hashedPassword = await bcrypt.hash(password, saltRounds);
+                user.password = hashedPassword;
+            }
+    
+            // Salva no BD
+            await user.save();
+    
+            res.status(200).json({ message: 'Usuário atualizado com sucesso.' });
+        } catch (err) {
+            res.status(500).json({ message: 'Não foi possível atualizar o usuário.' });
         }
     },
 
     deleteUser: async (req, res) => {
-        try{
-            const result = await userModel.deleteOne({cpf: req.body.cpf})
-            res.status(200).send({message: "Usuário removido com sucesso!"})
-        }catch(err){
-            res.status(500).json({message: "Não foi possível remover o usuário!"})
+        try {
+            // Recebendo o CPF do body
+            const { cpf } = req.body;
+    
+            // Verificando se o CPF realmente foi fornecido
+            if (!cpf) {
+                return res.status(404).json({ message: 'Forneça o CPF do usuário a ser deletado.' });
+            }
+    
+            // Buscando o usuário no BD e removendo ele
+            const user = await userModel.User.findOneAndDelete({ cpf: cpf });
+    
+            // Caso não encontre o usuário entra no if abaixo
+            if (!user) {
+                return res.status(404).json({ message: 'Usuário não encontrado.' });
+            }
+    
+            // Retorno de user removido
+            res.status(200).send({ message: 'Usuário removido com sucesso!' });
+        } catch (err) {
+            res.status(500).json({ message: 'Não foi possível remover o usuário.' });
         }
     },
 
@@ -58,34 +121,30 @@ module.exports = {
         const { username, password } = req.body;
 
         try {
-            const user = await userModel.findOne({ username: username }).select('+password');   
+            // Procura o usuário/funcionário através do username e seleciona o password
+            const user = await userModel.User.findOne({ username: username }).select('+password');
+            const employee = await userModel.Employee.findOne({ username: username }).select('+password');
 
-            // Autenticando o token e verificando o usuário
-            if (user) {
-                // Recebendo a senha digitada no body e comparando com a senha criptografada
-                // presente na DB
-                const passwordMatch = await bcrypt.compare(password, user.password);
+            // Verifica se um user/func foi encontrado
+            if (user || employee) {
+                // Caso o usuário tenha sido encontrado, compara a senha fornecida com a senha no BD, ambas criptografadas
+                const userFound = user || employee;
+                const passwordCript = await bcrypt.compare(password, userFound.password);
 
-                // Verificando a função e o token após a verificação da senha
-                if(passwordMatch){
-                    // Procurando a função do usuário
-                    const role = user.role === 'funcionario' ? 'funcionario' : 'usuario'
-                    // Gerando o token
-                    const token = jwt.sign({username: user.username, role: role}, process.env.SECRET_KEY, { expiresIn: '1h'} );
-
-                    // Retornando o token
-                    res.status(200).json({ message: "Autenticação realizada.", token: token });
-                }else{
-                    // Senha não confere
-                    res.status(401).json({ message: "Senha inválida"})
+                if (passwordCript) {
+                    // Gera o token de acordo c o tipo de usuário, o __t indica a classe herdada, caso seja employee
+                    const role = userFound.__t === 'Employee' ? 'funcionario' : 'usuario';
+                    const token = jwt.sign({ username: userFound.username, role: role }, process.env.SECRET_KEY, { expiresIn: '1h' });
+            
+                    res.status(200).json({ message: 'Autenticação realizada.', token: token });
+                } else {
+                    res.status(401).json({ message: 'Senha inválida' });
                 }
             } else {
-                // Usuário não encontrado
-                res.status(401).json({ message: "Usuário inválido." });
+                res.status(401).json({ message: 'Usuário ou funcionário inválido.' });
             }
         } catch (err) {
-            res.status(500).json({ message: "Erro ao autenticar." });
+            res.status(500).json({ message: 'Erro ao autenticar.' });
         }
-    }
-
-}
+    },
+};

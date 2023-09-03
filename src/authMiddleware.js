@@ -1,11 +1,30 @@
 // Realizando importações
 const jwt = require('jsonwebtoken')
 const dotenv = require('dotenv')
+const { User, Employee } = require('./models/userModel')
 
 dotenv.config({path: 'config.env'})
 
+// Definindo a função de token para usuário
+function tokenForUser(user){
+    return jwt.sign(
+        {usermame: User.usermame, role: 'user'},
+        process.env.SECRET_KEY,
+        {expiresIn: '1h'}
+    )
+}
+
+// Definindo a função de token para empregado
+function tokenForEmployee(employee){
+    return jwt.sign(
+        {usermame: Employee.usermame, role: 'employee'},
+        process.env.SECRET_KEY,
+        {expiresIn: '1h'}
+    )
+}
+
 module.exports = (req, res, next) => {
-    // Definindo o token
+    // Recebendo o token
     const token = req.header('Authorization')
 
     // Se o sistema não encontrar o token
@@ -15,11 +34,21 @@ module.exports = (req, res, next) => {
 
     // Sistema encontra o token e entra no try catch
     try{
-        // Uso a função do jwt verify para verificar o token, uso o split para obter
+        // Uso a função do jwt decode para decodificar o token, uso o split para obter
         // apenas o conteúdo do token, tirando o 'Bearer' que vem na frente 
         // (o mais difícil foi descobrir que vinha essa palavra na frente)
-        const verifyToken = jwt.verify(token.split(' ')[1], process.env.SECRET_KEY)
-        req.user = verifyToken
+        const decodeToken = jwt.decode(token.split(' ')[1])
+        
+
+        // Verifico através do token decodificado se é um usuário ou employee
+        if(decodeToken.role === 'user'){
+            const userToken = tokenForUser(decodeToken)
+            req.userToken = userToken;
+        }else if (decodeToken.role === 'employee') {
+            const employeeToken = tokenForEmployee(decodeToken);
+            req.employeeToken = employeeToken;
+        }
+
         next()
     }catch(err){
         // Trato o erro de token inválido para não confundir

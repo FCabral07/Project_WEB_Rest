@@ -1,41 +1,26 @@
 // Importando o mongoose e o schema
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
-const bcrypt = require('bcrypt');
-const saltRounds = 10;  // Número de rounds do meu HASH
 
 // Model do usuário/funcionário:
 const userSchema = new Schema({
     username: {type: String, required: true, unique: true},
     name: {type: String},
-    cpf: {type: String, required: true, unique: true},
+    cpf: {type: String, required: true, unique: true},  // O identificador é o CPF
     // Com o select false eu digo ao meu código para não retornar esse valor em
     // consultas REST
     password: {type: String, required: true, select: false},
-    salary: {type: Number},
-    // Defino se é usuário ou funcionário
-    role: {type: String, lowercase: true}
+    age: {type: Number},
     // Espaço para criar um histórico de compras
 });
 
-// Criptogrando a senha
-userSchema.pre('save', async function (next){
-    // Verifica o campo password no BD, se foi modificado
-    if(this.isModified('password')){
-        try{
-            // Gera a senha criptografada/hasheada (nao sei se existe essa palavra)
-            const hashedPassword = await bcrypt.hash(this.password, saltRounds)
+// Modelo para usuário
+const User = mongoose.model('User', userSchema);
 
-            // Substituo a senha por ela criptografada
-            this.password = hashedPassword
-            next()
-        }catch(err){
-            next(err)
-        }
-    }else{
-        next()
-    }
-})
+// Modelo para funcionário
+const Employee = User.discriminator('Employee', new Schema({
+    salary: {type: Number, required: true},
+}))
 
 // Exportando o model
-module.exports = mongoose.model('User', userSchema);
+module.exports = { User, Employee };
