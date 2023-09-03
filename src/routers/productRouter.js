@@ -3,14 +3,10 @@
 // Importações
 const express = require("express");
 const productController = require("../controllers/productController");
-//const authMiddleware = require('../authMiddleware')
-//const roleMiddleware = require('../roleMiddleware')
 
 const productRouter = express.Router();
 
-// Definindo as rotas que precisam dos tokens
-//productRouter.use("/product");
-
+// Rotas simples, sem parametros
 productRouter
   .route("/product")
   .post((req, res) => productController.createProduct(req, res))
@@ -18,7 +14,7 @@ productRouter
 
 // Rotas para deletar produtos
 productRouter
-  .route("/product/delete/:nome")
+  .route("/product/delete/:id")
   .delete((req, res) => productController.deleteProduct(req, res));
 
 // Recebendo a lista de produtos

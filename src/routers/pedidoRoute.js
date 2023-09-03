@@ -5,16 +5,16 @@ const pedidoRouter = express.Router();
 
 // Rota para criar um novo pedido
 pedidoRouter
-  .route("/pedido")
+  .route("/")
   .post((req, res) => pedidoController.createPedido(req, res));
 
 // Rota para listar todos os pedidos
 pedidoRouter
   .route("/pedidos")
   .get((req, res) => pedidoController.listarPedidos(req, res));
-// Rota para excluir todos os pedidos
 
-pedidoRouter.delete("/pedidos", (req, res) =>
+// Rota para excluir todos os pedidos
+pedidoRouter.delete("/", (req, res) =>
   pedidoController.excluirTodosPedidos(req, res)
 );
 
