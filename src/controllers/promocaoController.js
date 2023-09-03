@@ -4,52 +4,33 @@ const User = require("../models/userModel");
 const Product = require("../models/productModel");
 
 module.exports = {
-  // Aplicar desconto para um cliente elegível
   aplicarDesconto: async (req, res) => {
     try {
-      // Obtenha o CPF do cliente do cabeçalho
       const clienteCPF = req.headers.cpf;
-
-      // Encontre o cliente
       const cliente = await User.findOne({ cpf: clienteCPF });
 
-      // Verifique se o cliente já possui uma promoção ativa
-      const promocaoExistente = await Promocao.findOne({
-        cliente: cliente._id,
-      });
-
-      if (promocaoExistente) {
-        return res
-          .status(400)
-          .json({ message: "O cliente já possui uma promoção ativa." });
-      }
-
-      // Obtenha os pedidos do cliente
       const pedidos = await Pedido.find({ cliente: cliente._id });
 
-      // Conte a quantidade de cada tipo de produto comprado
-      const tiposComprados = {};
+      const resultadoAgregacao = await Pedido.aggregate([
+        {
+          $match: { cliente: cliente._id },
+        },
+        {
+          $unwind: "$produtos",
+        },
+        {
+          $group: {
+            _id: "$produtos.tipo",
+            quantidade: { $sum: "$produtos.quantidade" },
+          },
+        },
+        {
+          $match: { quantidade: { $gte: 3 } }, // Limite mínimo para criar promoção
+        },
+      ]);
 
-      for (const pedido of pedidos) {
-        for (const item of pedido.produtos) {
-          if (!tiposComprados[item.tipo]) {
-            tiposComprados[item.tipo] = item.quantidade;
-          } else {
-            tiposComprados[item.tipo] += item.quantidade;
-          }
-        }
-      }
+      const tiposComDesconto = resultadoAgregacao.map((result) => result._id);
 
-      // Verifique se algum tipo atingiu a quantidade mínima para a promoção (por exemplo, 3)
-      const tiposComDesconto = [];
-
-      for (const tipo in tiposComprados) {
-        if (tiposComprados[tipo] >= 3) {
-          tiposComDesconto.push(tipo);
-        }
-      }
-
-      // Se o cliente é elegível, crie uma promoção para ele
       if (tiposComDesconto.length > 0) {
         const promocao = new Promocao({
           cliente: cliente._id,
@@ -69,21 +50,19 @@ module.exports = {
       res.status(500).json({ message: "Erro ao aplicar a promoção." });
     }
   },
-
-  // Obter produtos com desconto (se cliente tiver promoção ativa)
   getProdutosComDesconto: async (req, res) => {
     try {
-      // Obtenha o CPF do cliente do cabeçalho
+      // Obter o CPF do cliente pelo Header
       const clienteCPF = req.headers.cpf;
 
-      // Encontre o cliente
+      // Encontrar o cliente
       const cliente = await User.findOne({ cpf: clienteCPF });
 
-      // Verifique se o cliente possui uma promoção ativa
+      // Verificar se o cliente já tem uma promoção
       const promocao = await Promocao.findOne({ cliente: cliente._id });
 
       if (promocao) {
-        // Se o cliente tiver uma promoção ativa, busque os produtos com desconto
+        // Se o cliente tiver uma promoção ativa, buscar os produtos com desconto
         const produtosComDesconto = await Product.find({
           category: { $in: promocao.produtosComDesconto },
         });
