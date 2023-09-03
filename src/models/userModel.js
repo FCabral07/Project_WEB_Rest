@@ -1,26 +1,26 @@
-// Importando o mongoose e o schema
-const mongoose = require('mongoose');
+// Importe as bibliotecas necessárias
+const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-// Model do usuário/funcionário:
+// Crie o modelo de usuário
 const userSchema = new Schema({
-    username: {type: String, required: true, unique: true},
-    name: {type: String},
-    cpf: {type: String, required: true, unique: true},  // O identificador é o CPF
-    // Com o select false eu digo ao meu código para não retornar esse valor em
-    // consultas REST
-    password: {type: String, required: true, select: false},
-    age: {type: Number},
-    // Espaço para criar um histórico de compras
+  username: { type: String, required: true, unique: true },
+  name: { type: String },
+  cpf: { type: String, unique: true }, // Remova a obrigação de ser requerido aqui
+  password: { type: String, required: true },
+  salary: { type: Number },
+  role: { type: String },
 });
 
-// Modelo para usuário
-const User = mongoose.model('User', userSchema);
+// Middleware para antes de salvar o usuário
+userSchema.pre("save", function (next) {
+  // Obtenha o CPF do cabeçalho (header)
+  const cpfFromHeader = this.get("cpf"); // Use o nome do header que você definir
+  if (cpfFromHeader) {
+    this.cpf = cpfFromHeader; // Defina o CPF no modelo de usuário
+  }
+  next();
+});
 
-// Modelo para funcionário
-const Employee = User.discriminator('Employee', new Schema({
-    salary: {type: Number, required: true},
-}))
-
-// Exportando o model
-module.exports = { User, Employee };
+// Exporte o modelo de usuário
+module.exports = mongoose.model("User", userSchema);
