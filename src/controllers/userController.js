@@ -144,6 +144,7 @@ module.exports = {
                 res.status(401).json({ message: 'Usuário ou funcionário inválido.' });
             }
         } catch (err) {
+            console.log(err);
             res.status(500).json({ message: 'Erro ao autenticar.' });
         }
     },
