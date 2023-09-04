@@ -6,6 +6,7 @@ const express = require('express');
 const userRouter = require('./src/routers/userRouter');
 const productRouter = require('./src/routers/productRouter');
 const promotionRouter = require('./src/routers/promotionRouter');
+const pedidoRouter = require('./src/routers/pedidoRoute')
 
 
 // Conectando o mongoose
@@ -17,6 +18,7 @@ app.use(express.json());
 app.use(userRouter);
 app.use(productRouter);
 app.use(promotionRouter);
+app.use(pedidoRouter);
 
 // Definindo a porta
 const port = process.env.PORT || 3000;

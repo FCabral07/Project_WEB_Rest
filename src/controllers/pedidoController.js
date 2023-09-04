@@ -1,5 +1,5 @@
 const Pedido = require("../models/pedidoModel");
-const User = require("../models/userModel");
+const { User, Employee } = require("../models/userModel");
 const Product = require("../models/productModel");
 
 module.exports = {

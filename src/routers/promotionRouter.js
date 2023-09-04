@@ -1,5 +1,5 @@
 const express = require("express");
-const promocaoController = require("../controllers/promotionController");
+const promocaoController = require("../controllers/promocaoController");
 const authMiddleware = require('../authMiddleware');
 const roleMiddleware = require('../roleMiddleware');
 
