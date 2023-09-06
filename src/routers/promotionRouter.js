@@ -5,17 +5,17 @@ const roleMiddleware = require('../roleMiddleware');
 
 const promocaoRouter = express.Router();
 
-promocaoRouter.use('/aplicarDesconto', authMiddleware, roleMiddleware)
-promocaoRouter.use('/getProdutosComDesconto', authMiddleware)
+promocaoRouter.use('/promocao', authMiddleware, roleMiddleware)
+promocaoRouter.use('/promocoes', authMiddleware)
 
 // Rota para aplicar desconto
 promocaoRouter
-  .route("/aplicarDesconto")
+  .route("/promocao")
   .post((req, res) => promocaoController.aplicarDesconto(req, res));
 
 // Rota para obter produtos com desconto
 promocaoRouter
-  .route("/getProdutosComDesconto")
+  .route("/promocoes")
   .get((req, res) => promocaoController.getProdutosComDesconto(req, res));
 
 module.exports = promocaoRouter;
