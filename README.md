@@ -112,7 +112,7 @@ Todas as rotas associadas a promoções requerem autenticação, mas apresentam 
 
 ### Exemplos para teste dos métodos;
 
-- **Criar um cliente:**
+#### Criar um cliente:
 
 {
 "username":"clienteteste",
@@ -122,7 +122,7 @@ Todas as rotas associadas a promoções requerem autenticação, mas apresentam 
 "age":20
 }
 
-- **Criar um funcionario:**
+#### Criar um funcionario:
 {
 "username" : "funcionarioteste",
 "name" : "teste funcionario",
@@ -132,20 +132,20 @@ Todas as rotas associadas a promoções requerem autenticação, mas apresentam 
 "salary" : 10000
 }
 
-- OBS: Ao passar "salary" na requisição, o usuário será criado automaticamente como Funcionário.
+**OBS: Ao passar "salary" na requisição, o usuário será criado automaticamente como Funcionário.**
 
 
-- **Login:**
+#### Login:
 {
 "username" : "funcionarioteste",
 "password" : "testefuncionario",
 }
 
-Após o login ser realizado com sucesso, será retornado um token de autenticação de duração de 1 hora.
+**Após o login ser realizado com sucesso, será retornado um token de autenticação de duração de 1 hora.**
 
-Esse token deverá ser passado dentro do Auth Type "Bearer Token" para que as requisições seguintes sejam autenticadas.
+**Esse token deverá ser passado dentro do Auth Type "Bearer Token" para que as requisições seguintes sejam autenticadas.**
 
-- **Criação de um produto:**
+#### Criação de um produto:
 
 {
 "name" : "Batata_inglesa",
@@ -155,25 +155,26 @@ Esse token deverá ser passado dentro do Auth Type "Bearer Token" para que as re
 "expDate" : "2025-12-09",
 "description": "Deliciosa batata"
 }
-- OBS: Caso o token não seja passado dentro do Bearer Token, será lançado um erro 501 "NOT IMPLEMENTED".
 
-- **Criação de um pedido:**
+**OBS: Caso o token não seja passado dentro do Bearer Token, será lançado um erro 501 "NOT IMPLEMENTED".**
+
+#### Criação de um pedido:
 
 {
   "nomeProduto": "batata_inglesa",
   "quantidade": 4
 }
 
-- OBS: Para a criação de um pedido, além do Bearer Token é necessário passar o CPF do usuário no header.
+**OBS: Para a criação de um pedido, além do Bearer Token é necessário passar o CPF do usuário no header.**
 
-Nesse caso, como o usuário fez um pedido de 4 produtos do mesmo tipo (legumes) ele está elegível para receber uma promoção para produtos desse tipo.
+**Nesse caso, como o usuário fez um pedido de 4 produtos do mesmo tipo (legumes) ele está elegível para receber uma promoção para produtos desse tipo.**
 
-Para aplicar a promoção, é necessário o seguinte:
+**Para aplicar a promoção, é necessário o seguinte:**
 
 1. Utilizar o método POST '/promocao"
 
 2. Passar o Bearer Token e o CPF do cliente elegível para receber a promoção para um tipo.
 
--Em caso de êxito, será retornada a lista de produtos do tipo que o cliente recebeu a promoção, já com os valores atualizados (desconto de 10%)
+**Em caso de êxito, será retornada a lista de produtos do tipo que o cliente recebeu a promoção, já com os valores atualizados (desconto de 10%)**
 
-OBS: Não é possível um cliente ter mais de uma promoção ativa.
+**OBS: Não é possível um cliente ter mais de uma promoção ativa.**
