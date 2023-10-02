@@ -11,8 +11,8 @@ dotenv.config({ path: 'config.env' });
 module.exports = {
     createUser: async (req, res) => {
         try {
-            // Verifico se 'salary' está presente no body
-            const isEmployee = 'salary' in req.body;
+            // Verifico se 'matricula' está presente no body
+            const isEmployee = 'matricula' in req.body;
     
             // Uso o model de acordo com a verificação acima
             const userModelType = isEmployee ? userModel.Employee : userModel.User;
@@ -28,9 +28,17 @@ module.exports = {
             
             res.status(201).json({ message: 'Usuário criado com sucesso.' });
         } catch (err) {
-            res.status(500).json({ message: 'Erro ao criar o usuário.' });
+            if (err.code === 11000 && err.keyPattern && err.keyPattern.email) {
+                // Tratar o erro de e-mail duplicado aqui (caso seja relevante)
+                res.status(400).json({ message: 'Este e-mail já está em uso.' });
+            } else if (err.code === 11000 && err.keyPattern && err.keyPattern.cpf) {
+                // Tratar o erro de CPF duplicado aqui (caso seja relevante)
+                res.status(400).json({ message: 'Este CPF já está em uso.' });
+            } else {
+                res.status(500).json({ message: 'Erro ao criar o usuário.' });
+            }
         }
-    },
+    },    
 
     getUser: async (req, res) => {
         try {
