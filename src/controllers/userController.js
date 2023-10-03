@@ -126,12 +126,12 @@ module.exports = {
     },
 
     login: async (req, res) => {
-        const { username, password } = req.body;
+        const { email, password } = req.body;
 
         try {
-            // Procura o usuário/funcionário através do username e seleciona o password
-            const user = await userModel.User.findOne({ username: username }).select('+password');
-            const employee = await userModel.Employee.findOne({ username: username }).select('+password');
+            // Procura o usuário/funcionário através do email e seleciona o password
+            const user = await userModel.User.findOne({ email: email }).select('+password');
+            const employee = await userModel.Employee.findOne({ email: email }).select('+password');
 
             // Verifica se um user/func foi encontrado
             if (user || employee) {
