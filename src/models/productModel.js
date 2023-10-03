@@ -1,13 +1,35 @@
-// Importando o mongoose e o schema
 const mongoose = require("mongoose");
-const Schema = mongoose.Schema;
 
-// Model do produto:
-const productSchema = new Schema({
-  name: { type: String, required: true, unique: true, lowercase: true },
-  price: { type: Number, required: true },
-  category: { type: String, required: true, lowercase: true },
+const Produto = new mongoose.Schema({
+  nome: {
+    type: String,
+    required: true,
+  },
+  codigoProduto: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  valor: {
+    type: Number,
+    required: true,
+  },
+  categoria: {
+    type: String,
+    required: true,
+  },
+  emPromocao: {
+    type: Boolean,
+    default: false,
+  },
+  valorPromocao: {
+    type: Number,
+    default: 0,
+  },
+  porcentagemPromocao: {
+    type: Number,
+    default: 0,
+  },
 });
 
-// Exportando o model
-module.exports = mongoose.model("Product", productSchema);
+module.exports = Produto;
