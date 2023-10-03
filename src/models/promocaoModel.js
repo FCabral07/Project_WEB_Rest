@@ -1,13 +1,20 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const promocaoSchema = new Schema({
-  cliente: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
+const promocaoSchema = new mongoose.Schema({
+  produto: {
+    type: Schema.Types.ObjectId,
+    ref: "Produto",
     required: true,
   },
-  produtosComDesconto: [String], // Lista de nomes de produtos com desconto para o cliente
+  porcentagemPromocao: {
+    type: Number,
+    required: true,
+    min: 1, // Valor mínimo permitido
+    max: 90, // Valor máximo permitido
+  },
 });
 
-module.exports = mongoose.model("Promocao", promocaoSchema);
+const Promocao = mongoose.model("Promocao", promocaoSchema);
+
+module.exports = Promocao;
