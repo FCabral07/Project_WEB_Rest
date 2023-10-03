@@ -1,30 +1,29 @@
-"use strict";
-
-// Importações
 const express = require("express");
+const router = express.Router();
 const productController = require("../controllers/productController");
+const authMiddleware = require("../authMiddleware");
+const roleMiddleware = require("../roleMiddleware");
 
-const productRouter = express.Router();
+//Autenticação na rota que cria um produto, altera e exclui um produto
+router.use("/produto", authMiddleware, roleMiddleware);
 
-// Rotas simples, sem parametros
-productRouter
-  .route("/product")
-  .post((req, res) => productController.createProduct(req, res))
-  .put((req, res) => productController.updateProduct(req, res));
+//Autenticação das demais rotas (GET)
+router.use("/produtos", authMiddleware, roleMiddleware);
+//Autenticação na rota que exclui um produto
 
-// Rotas para deletar produtos
-productRouter
-  .route("/product/delete/:id")
-  .delete((req, res) => productController.deleteProduct(req, res));
+// Rota para criar um novo produto
+router.post("/produto", productController.createProduct);
 
-// Recebendo a lista de produtos
-productRouter
-  .route("/products")
-  .get((req, res) => productController.getProducts(req, res));
+// Rota para listar todos os produtos
+router.get("/produtos", productController.getProducts);
 
-// Recebendo um produto especifico
-productRouter
-  .route("/products/:id")
-  .get((req, res) => productController.getProduct(req, res));
+// Rota para listar todos os produtos em promoção
+router.get("/produtos/promocoes", productController.getProductsPromotion);
 
-module.exports = productRouter;
+// Rota para atualizar um produto
+router.put("/produto", productController.updateProduct);
+
+// Rota para excluir um produto
+router.delete("/produtos/:codigoProduto", productController.deleteProduct);
+
+module.exports = router;
