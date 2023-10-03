@@ -1,12 +1,11 @@
 // Importando o model
-const productModel = require("../models/productModel");
+const Produto = require("../models/productModel");
 
-//  Criando a exportação
 module.exports = {
+  // POST de um produto
   createProduct: async (req, res) => {
     try {
-      const result = await productModel.create(req.body);
-
+      const result = await Produto.create(req.body);
       res
         .status(201)
         .json({ message: `O produto foi cadastrado com sucesso!` });
@@ -14,41 +13,39 @@ module.exports = {
       res.status(501).json({ message: `Não foi possível cadastrar o produto` });
     }
   },
-
-  getProduct: async (req, res) => {
+  // GET de todos os produtos
+  getProducts: async (req, res) => {
     try {
-      const result = await productModel
-        .findOne({ name: req.params.id })
-        .select(["-_v", "-_id", "-__v"]);
-      res.status(200).send(result);
-    } catch (err) {
+      const produtos = await Produto.find({}, "-_v -_id");
+      res.status(200).json(produtos);
+    } catch (error) {
+      console.error(error);
       res
         .status(503)
-        .json({ message: "Não foi possível recuperar o produto no momento" });
+        .json({ mensagem: "Não foi possível recuperar os produtos" });
     }
   },
 
-  getProducts: async (req, res) => {
-    productModel
-      .find({})
-      .select(["-_v", "-_id", "-__v"])
-      .then((result) => {
-        res.status(200).json(result);
-      })
-      .catch(() => {
-        res
-          .status(503)
-          .json({ message: "Não foi possível recuperar os produtos" });
-      });
+  //GET de todos os produtos em promoção
+  getProductsPromotion: async (req, res) => {
+    try {
+      const produtosPromo = await Produto.find(
+        { emPromocao: true },
+        "-_v -_id"
+      );
+      res.status(200).json(produtosPromo);
+    } catch (error) {
+      console.error(error);
+      res
+        .status(503)
+        .json({ mensagem: "Não foi possível recuperar os produtos" });
+    }
   },
 
   updateProduct: async (req, res) => {
     try {
-      const result = await productModel.updateOne(
-        { name: req.body.name },
-        req.body
-      );
-      res.status(200).send({ message: "Usuário atualizado com sucesso." });
+      const result = await Produto.updateOne({ nome: req.body.nome }, req.body);
+      res.status(200).send({ message: "Produto atualizado com sucesso." });
     } catch (err) {
       res
         .status(501)
@@ -58,7 +55,7 @@ module.exports = {
 
   deleteProduct: async (req, res) => {
     try {
-      const result = await productModel.deleteOne({ name: req.params.id });
+      const result = await Produto.deleteOne({ codigoProduto: req.params.id });
       res.status(200).send({ message: "Produto removido com sucesso!" });
     } catch (err) {
       res.status(500).json({ message: "Não foi possível remover o produto!" });
