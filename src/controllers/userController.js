@@ -142,7 +142,7 @@ module.exports = {
                 if (passwordCript) {
                     // Gera o token de acordo c o tipo de usuário, o __t indica a classe herdada, caso seja employee
                     const role = userFound.__t === 'Employee' ? 'funcionario' : 'usuario';
-                    const token = jwt.sign({ username: userFound.username, role: role }, process.env.SECRET_KEY, { expiresIn: '1h' });
+                    const token = jwt.sign({ name: userFound.name, role: role }, process.env.SECRET_KEY, { expiresIn: '1h' });
             
                     res.status(200).json({ message: 'Autenticação realizada.', token: token });
                 } else {

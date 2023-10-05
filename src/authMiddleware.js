@@ -8,7 +8,7 @@ dotenv.config({path: 'config.env'})
 // Definindo a função de token para usuário
 function tokenForUser(user){
     return jwt.sign(
-        {usermame: User.usermame, role: 'user'},
+        {name: User.name, role: 'user'},
         process.env.SECRET_KEY,
         {expiresIn: '1h'}
     )
@@ -17,7 +17,7 @@ function tokenForUser(user){
 // Definindo a função de token para empregado
 function tokenForEmployee(employee){
     return jwt.sign(
-        {usermame: Employee.usermame, role: 'employee'},
+        {name: Employee.name, role: 'employee'},
         process.env.SECRET_KEY,
         {expiresIn: '1h'}
     )
