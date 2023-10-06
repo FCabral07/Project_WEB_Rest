@@ -19,7 +19,7 @@ function tokenForEmployee(employee){
     return jwt.sign(
         {name: Employee.name, role: 'employee'},
         process.env.SECRET_KEY,
-        {expiresIn: '1h'}
+        {expiresIn: '9h'}
     )
 }
 

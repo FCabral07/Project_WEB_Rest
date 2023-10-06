@@ -4,83 +4,126 @@ const { User, Employee } = require("../models/userModel");
 const Product = require("../models/productModel");
 
 module.exports = {
-  aplicarDesconto: async (req, res) => {
+  adicionarPromocao: async (req, res) => {
     try {
-      const clienteCPF = req.headers.cpf;
-      const cliente = await User.findOne({ cpf: clienteCPF });
+      const { code } = req.body;
+      const { promotionPercentage } = req.body;
 
-      const pedidos = await Pedido.find({ cliente: cliente._id });
+      const produto = await Product.findOne({ code })
 
-      const resultadoAgregacao = await Pedido.aggregate([
-        {
-          $match: { cliente: cliente._id },
-        },
-        {
-          $unwind: "$produtos",
-        },
-        {
-          $group: {
-            _id: "$produtos.tipo",
-            quantidade: { $sum: "$produtos.quantidade" },
-          },
-        },
-        {
-          $match: { quantidade: { $gte: 3 } }, // Limite mínimo para criar promoção
-        },
-      ]);
-
-      const tiposComDesconto = resultadoAgregacao.map((result) => result._id);
-
-      if (tiposComDesconto.length > 0) {
-        const promocao = new Promocao({
-          cliente: cliente._id,
-          produtosComDesconto: tiposComDesconto,
-        });
-        await promocao.save();
-        return res
-          .status(201)
-          .json({ message: "Promoção aplicada com sucesso." });
-      } else {
-        return res
-          .status(200)
-          .json({ message: "Cliente não é elegível para a promoção." });
+      if(!produto){
+        console.log(code)
+        console.log(promotionPercentage)
+        return res.status(410).json({ message: "Product not found"});
       }
+
+      if (produto.isPromotion){
+        return res.status(401).json({ message: "Promotion not implemented, already satisfied this"})
+      }
+
+      if (promotionPercentage < 1 || promotionPercentage > 90) {
+        return res.status(400).json({
+          mensagem: "A porcentagem de promoção deve estar entre 1 e 90.",
+        });
+      }
+
+      produto.isPromotion = true;
+      produto.promotionPrice = (1 - promotionPercentage / 100) * produto.price;
+      produto.promotionPercentage = promotionPercentage;
+      await produto.save();
+
+      res.status(201).json({ mensagem: "Promoção criada com sucesso." });
+    
     } catch (error) {
       console.error("Erro ao aplicar a promoção:", error);
       res.status(500).json({ message: "Erro ao aplicar a promoção." });
     }
   },
-  getProdutosComDesconto: async (req, res) => {
+
+  listarProdutosEmPromocao: async (req, res) => {
     try {
-      // Obter o CPF do cliente pelo Header
-      const clienteCPF = req.headers.cpf;
+      const produtosEmPromocao = await Product.find({ isPromotion: true });
 
-      // Encontrar o cliente
-      const cliente = await User.findOne({ cpf: clienteCPF });
-
-      // Verificar se o cliente já tem uma promoção
-      const promocao = await Promocao.findOne({ cliente: cliente._id });
-
-      if (promocao) {
-        // Se o cliente tiver uma promoção ativa, buscar os produtos com desconto
-        const produtosComDesconto = await Product.find({
-          category: { $in: promocao.produtosComDesconto },
-        });
-
-        // Aplicar desconto de 10% nos preços
-        produtosComDesconto.forEach((produto) => {
-          produto.price = produto.price * 0.9;
-        });
-
-        return res.status(200).json(produtosComDesconto);
-      } else {
-        // Se o cliente não tiver uma promoção ativa, retorne os produtos normais
-        const produtos = await Product.find({});
-        return res.status(200).json(produtos);
-      }
+      res.status(200).json(produtosEmPromocao)
     } catch (error) {
       console.error("Erro ao obter produtos com desconto:", error);
       res.status(500).json({ message: "Erro ao obter produtos com desconto." });
     }
   },
+
+  removerPromocao: async(req, res) => {
+    try {
+      const { code } = req.body;
+  
+      // Verifique se o produto existe
+      const produto = await Product.findOne({ code });
+  
+      if (!produto) {
+        return res.status(400).json({ mensagem: "Produto não encontrado." });
+      }
+  
+      // Verifique se o produto está em promoção
+      if (!produto.isPromotion) {
+        return res
+          .status(400)
+          .json({ mensagem: "O produto não está em promoção." });
+      }
+  
+      // Remove a promoção do produto
+      await Promocao.deleteOne({ produto: produto._id });
+  
+      // Atualize o produto para indicar que não está mais em promoção
+      produto.isPromotion = false;
+      produto.promotionPrice = 0;
+      produto.promotionPercentage = 0;
+      await produto.save();
+  
+      res.status(200).json({ mensagem: "Promoção removida com sucesso." });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ mensagem: "Erro ao remover a promoção." });
+    }
+  },
+
+  atualizarPromocao: async(req, res) => {
+    try {
+      const { code } = req.body; // Extrai o codigoProduto da URL
+      const { promotionPercentage } = req.body;
+  
+      // Verifique se o produto existe
+      const produto = await Product.findOne({ code });
+  
+      if (!produto) {
+        return res.status(400).json({ mensagem: "Produto não encontrado." });
+      }
+  
+      // Verifique se o produto está em promoção
+      if (!produto.isPromotion) {
+        return res
+          .status(400)
+          .json({ mensagem: "O produto não está em promoção." });
+      }
+  
+      // Verifique se a porcentagemPromocao está dentro do intervalo permitido (1 a 90)
+      if (promotionPercentage < 1 || promotionPercentage > 90) {
+        return res.status(400).json({
+          mensagem: "A porcentagem de promoção deve estar entre 1 e 90.",
+        });
+      }
+  
+      // Atualize a porcentagem da promoção
+      produto.promotionPercentage = promotionPercentage;
+  
+      // Recalcule o valor da promoção com base na nova porcentagem
+      produto.promotionPrice = (1 - promotionPercentage / 100) * produto.price;
+      await produto.save();
+  
+      res.status(200).json({ mensagem: "Promoção atualizada com sucesso." });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ mensagem: "Erro ao atualizar a promoção." });
+    }
+  }
+  
+
 };

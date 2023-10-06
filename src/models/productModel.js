@@ -9,7 +9,9 @@ const productSchema = new Schema({
     src: {type: String, required: true},
     code: {type: String, required: true, lowercase: true, unique: true},
     price: {type: Number, required: true},
+    isPromotion: {type: Boolean, default: false},
     promotionPrice: {type: Number, default: null},
+    promotionPercentage: {type: Number, default:0},
     qtd: {type: String},
     category: [{type: String, lowercase:true}],   // É o tipo do produto
     expDate: {type: Date, required: true},

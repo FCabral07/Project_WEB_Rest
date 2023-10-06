@@ -2,10 +2,21 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const promocaoSchema = new Schema({
+  produto: {
+    type: Schema.Types.ObjectId,
+    ref: "Product",
+    required: true,
+  },
+  percentagePromotion:{
+    type: Number,
+    required: true,
+    min:1,
+    max: 90,
+  },
+
   cliente: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    required: true,
   },
   produtosComDesconto: [String], // Lista de nomes de produtos com desconto para o cliente
 });
